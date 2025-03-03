@@ -1,3 +1,4 @@
+// pages/api/graphql.ts
 import { ApolloServer } from "@apollo/server";
 import { startServerAndCreateNextHandler } from "@as-integrations/next";
 import { PrismaClient } from "@prisma/client";
@@ -32,30 +33,50 @@ const typeDefs = `
 const resolvers = {
   Query: {
     getMessages: async () => {
-      return await prisma.message.findMany();
+      try {
+        return await prisma.message.findMany();
+      } catch (error) {
+        throw new Error("Failed to fetch messages");
+      }
     },
     getMessageById: async (_: unknown, { id }: { id: string }) => {
-      return await prisma.message.findUnique({
-        where: { id },
-      });
+      try {
+        return await prisma.message.findUnique({
+          where: { id },
+        });
+      } catch (error) {
+        throw new Error("Failed to fetch message by ID");
+      }
     },
   },
   Mutation: {
     createMessage: async (_: unknown, { input }: { input: { name: string; content: string } }) => {
-      return await prisma.message.create({
-        data: input,
-      });
+      try {
+        return await prisma.message.create({
+          data: input,
+        });
+      } catch (error) {
+        throw new Error("Failed to create message");
+      }
     },
     updateMessage: async (_: unknown, { id, input }: { id: string; input: { name: string; content: string } }) => {
-      return await prisma.message.update({
-        where: { id },
-        data: input,
-      });
+      try {
+        return await prisma.message.update({
+          where: { id },
+          data: input,
+        });
+      } catch (error) {
+        throw new Error("Failed to update message");
+      }
     },
     deleteMessage: async (_: unknown, { id }: { id: string }) => {
-      return await prisma.message.delete({
-        where: { id },
-      });
+      try {
+        return await prisma.message.delete({
+          where: { id },
+        });
+      } catch (error) {
+        throw new Error("Failed to delete message");
+      }
     },
   },
 };
@@ -67,25 +88,14 @@ const server = new ApolloServer({
 
 const handler = startServerAndCreateNextHandler(server, {
   context: async (req: NextRequest) => {
-    // Provide the context with the request and Prisma instance.
     return { req, prisma };
   },
 });
 
-// In Next.js 15, the route context parameter's "params" property is a Promise.
-// We update the GET and POST handlers to reflect this requirement.
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<Record<string, string>> }
-) {
-  await params; // Awaiting to ensure correct type resolution
+export async function GET(request: NextRequest) {
   return handler(request);
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<Record<string, string>> }
-) {
-  await params;
+export async function POST(request: NextRequest) {
   return handler(request);
 }
