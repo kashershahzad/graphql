@@ -1,10 +1,11 @@
-// pages/api/graphql.ts
 import { ApolloServer } from "@apollo/server";
 import { startServerAndCreateNextHandler } from "@as-integrations/next";
 import { PrismaClient } from "@prisma/client";
 import { NextRequest } from "next/server";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  log: ['query', 'info', 'warn', 'error'],
+});
 
 const typeDefs = `
   type Query {
@@ -33,48 +34,68 @@ const typeDefs = `
 const resolvers = {
   Query: {
     getMessages: async () => {
+      console.log('Fetching messages...');
       try {
-        return await prisma.message.findMany();
+        const messages = await prisma.message.findMany();
+        console.log('Messages fetched:', messages);
+        return messages;
       } catch (error) {
+        console.error('Error fetching messages:', error);
         throw new Error("Failed to fetch messages");
       }
     },
     getMessageById: async (_: unknown, { id }: { id: string }) => {
+      console.log(`Fetching message with ID: ${id}`);
       try {
-        return await prisma.message.findUnique({
+        const message = await prisma.message.findUnique({
           where: { id },
         });
+        console.log('Message fetched:', message);
+        return message;
       } catch (error) {
+        console.error('Error fetching message by ID:', error);
         throw new Error("Failed to fetch message by ID");
       }
     },
   },
   Mutation: {
     createMessage: async (_: unknown, { input }: { input: { name: string; content: string } }) => {
+      console.log('Creating message:', input);
       try {
-        return await prisma.message.create({
+        const message = await prisma.message.create({
           data: input,
         });
+        console.log('Message created:', message);
+        return message;
       } catch (error) {
+        console.error('Error creating message:', error);
         throw new Error("Failed to create message");
       }
     },
     updateMessage: async (_: unknown, { id, input }: { id: string; input: { name: string; content: string } }) => {
+      console.log(`Updating message with ID: ${id}`, input);
       try {
-        return await prisma.message.update({
+        const message = await prisma.message.update({
           where: { id },
           data: input,
         });
+        console.log('Message updated:', message);
+        return message;
       } catch (error) {
+        console.error('Error updating message:', error);
         throw new Error("Failed to update message");
       }
     },
     deleteMessage: async (_: unknown, { id }: { id: string }) => {
+      console.log(`Deleting message with ID: ${id}`);
       try {
-        return await prisma.message.delete({
+        const message = await prisma.message.delete({
           where: { id },
         });
+        console.log('Message deleted:', message);
+        return message;
       } catch (error) {
+        console.error('Error deleting message:', error);
         throw new Error("Failed to delete message");
       }
     },
