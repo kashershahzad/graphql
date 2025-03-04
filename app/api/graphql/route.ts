@@ -1,4 +1,4 @@
-// pages/api/graphql.ts
+import { gql } from "@apollo/client";
 import { ApolloServer } from "@apollo/server";
 import { startServerAndCreateNextHandler } from "@as-integrations/next";
 import { PrismaClient } from "@prisma/client";
@@ -6,59 +6,58 @@ import { NextRequest } from "next/server";
 
 const prisma = new PrismaClient();
 
-const typeDefs = `
-  type Query {
-    getMessages: [Message]
-    getMessageById(id: String!): Message
-  }
+const typeDefs = gql`
+type Query {
+getMessages: [Message]
+}
 
-  type Mutation {
-    createMessage(input: MessageInput): Message
-    updateMessage(id: String!, input: MessageInput): Message
-    deleteMessage(id: String!): Message
-  }
+type Message {
+  id: String!
+  name: String!
+  content: String!
+}
 
-  input MessageInput {
-    name: String
-    content: String
-  }
+type Mutation {
+createMessage(input:MessageInput): Message
+deleteMessage(id: String!): Message
+updateMessage(id: String!, input: MessageInput): Message
+}
 
-  type Message {
-    id: String
-    name: String
-    content: String
-  }
-`;
-
+input MessageInput {
+  name: String!
+  content: String!
+}
+`
 const resolvers = {
   Query: {
     getMessages: async () => {
-      try {
-        return await prisma.message.findMany();
-      } catch (error) {
-        throw new Error("Failed to fetch messages");
-      }
-    },
-    getMessageById: async (_: unknown, { id }: { id: string }) => {
-      try {
-        return await prisma.message.findUnique({
-          where: { id },
-        });
-      } catch (error) {
-        throw new Error("Failed to fetch message by ID");
-      }
+      return await prisma.message.findMany();
     },
   },
   Mutation: {
-    createMessage: async (_: unknown, { input }: { input: { name: string; content: string } }) => {
+    createMessage: async (_: any, args: { input: { name: string; content: string } }) => {
       try {
         return await prisma.message.create({
-          data: input,
+          data: {
+            name: args.input.name,
+            content: args.input.content,
+          },
         });
       } catch (error) {
         throw new Error("Failed to create message");
       }
     },
+
+    deleteMessage: async (_: unknown, { id }: { id: string }) => {
+      try {
+        return await prisma.message.delete({
+          where: { id },
+        });
+      } catch (error) {
+        throw new Error("Failed to delete message");
+      }
+    },
+
     updateMessage: async (_: unknown, { id, input }: { id: string; input: { name: string; content: string } }) => {
       try {
         return await prisma.message.update({
@@ -69,33 +68,24 @@ const resolvers = {
         throw new Error("Failed to update message");
       }
     },
-    deleteMessage: async (_: unknown, { id }: { id: string }) => {
-      try {
-        return await prisma.message.delete({
-          where: { id },
-        });
-      } catch (error) {
-        throw new Error("Failed to delete message");
-      }
-    },
   },
+
 };
+
 
 const server = new ApolloServer({
   typeDefs,
-  resolvers,
-});
+  resolvers
+})
 
-const handler = startServerAndCreateNextHandler(server, {
-  context: async (req: NextRequest) => {
-    return { req, prisma };
-  },
-});
+const handler = startServerAndCreateNextHandler(server)
+
+export async function POST(request: NextRequest) {
+  return handler(request);
+}
 
 export async function GET(request: NextRequest) {
   return handler(request);
 }
 
-export async function POST(request: NextRequest) {
-  return handler(request);
-}
+
