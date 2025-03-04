@@ -1,7 +1,7 @@
 {
     "functions": {
       "api/graphql.ts": {
-        "maxDuration": 90
+        "maxDuration": 60
       }
     }
   }
