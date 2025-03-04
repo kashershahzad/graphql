@@ -4,7 +4,14 @@ import { startServerAndCreateNextHandler } from "@as-integrations/next";
 import { PrismaClient } from "@prisma/client";
 import { NextRequest } from "next/server";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+  log: ['query', 'info', 'warn', 'error'],
+});
 
 const typeDefs = `
   type Query {
