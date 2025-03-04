@@ -1,6 +1,6 @@
 {
     "functions": {
-      "api/graphql.ts": {
+      "app/api/graphql.ts": {
         "maxDuration": 60
       }
     }
