@@ -9,7 +9,6 @@ const client = new ApolloClient({
   cache: new InMemoryCache(),
   headers: {
     'Content-Type': 'application/json',
-    'apollo-require-preflight': 'true',
   },
 });
 
