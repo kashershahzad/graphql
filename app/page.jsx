@@ -7,6 +7,10 @@ import React from 'react';
 const client = new ApolloClient({
   uri: '/api/graphql',
   cache: new InMemoryCache(),
+  headers: {
+    'Content-Type': 'application/json',
+    'apollo-require-preflight': 'true',
+  },
 });
 
 const GET_MESSAGES = gql`
